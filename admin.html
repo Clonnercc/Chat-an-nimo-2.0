@@ -1,0 +1,79 @@
+<!DOCTYPE html><html>
+<head>
+<meta charset="UTF-8">
+<title>Admin</title>
+<style>
+body{
+  background:black;
+  color:#0f0;
+  font-family:Arial;
+  padding:20px;
+}input,button,textarea{ width:100%; margin-top:10px; padding:10px; }
+
+button{ background:red; color:white; border:none; cursor:pointer; } </style>
+
+</head>
+<body><div id="login">
+  <input id="user" placeholder="Usuário">
+  <input id="pass" type="password" placeholder="Senha">
+  <button onclick="entrar()">Entrar</button>
+</div><div id="painel" style="display:none;">
+  <h3>Aviso Global</h3>
+  <textarea id="aviso"></textarea>
+  <button onclick="avisar()">Enviar Aviso</button>  <h3>Adicionar Produto</h3>
+  <input id="nome" placeholder="Nome">
+  <input id="preco" placeholder="Preço">
+  <button onclick="addProduto()">Adicionar</button>  <h3>Sistema</h3>
+  <button onclick="apagar()">DESTRUIR SISTEMA</button>
+</div><script>
+async function entrar(){
+  const usuario = document.getElementById("user").value;
+  const senha = document.getElementById("pass").value;
+
+  if(usuario === "Hk171" && senha === "190801"){
+    document.getElementById("login").style.display = "none";
+    document.getElementById("painel").style.display = "block";
+
+    fetch("/admin-login", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        user: usuario,
+        pass: senha
+      })
+    }).catch(() => {});
+
+    return;
+  }
+
+  alert("Usuário ou senha incorretos");
+}
+
+function avisar(){
+  fetch("/global-alert", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      mensagem: document.getElementById("aviso").value
+    })
+  });
+}
+
+function addProduto(){
+  fetch("/add-produto", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      nome: document.getElementById("nome").value,
+      preco: document.getElementById("preco").value
+    })
+  });
+}
+
+function apagar(){
+  fetch("/destroy", {
+    method:"POST"
+  });
+}
+</script></body>
+</html>
