@@ -1,0 +1,108 @@
+<!DOCTYPE html><html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat Anônimo</title>
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial, sans-serif;
+}body{ background:#0b0b0b; color:#fff; height:100vh; display:flex; flex-direction:column; }
+
+header{ background:#111; padding:16px 20px; border-bottom:1px solid #222; display:flex; justify-content:space-between; align-items:center; }
+
+.logo{ font-size:20px; font-weight:bold; }
+
+.room{ font-size:14px; color:#bbb; }
+
+#chat{ flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:12px; }
+
+.msg{ background:#171717; border:1px solid #2a2a2a; padding:12px; border-radius:14px; max-width:85%; word-break:break-word; }
+
+.msg b{ color:#ff2d75; display:block; margin-bottom:6px; }
+
+.system{ background:#1b1b1b; border:1px solid #333; text-align:center; color:#aaa; }
+
+footer{ padding:15px; background:#111; border-top:1px solid #222; display:flex; gap:10px; }
+
+input{ flex:1; padding:14px; border:none; border-radius:12px; background:#1c1c1c; color:#fff; outline:none; }
+
+button{ padding:14px 20px; border:none; border-radius:12px; background:#ff0055; color:#fff; font-weight:bold; cursor:pointer; }
+
+button:hover{ opacity:.9; } </style>
+
+</head>
+<body><header>
+  <div>
+    <div class="logo">Chat Anônimo</div>
+    <div class="room" id="roomLabel">Sala: carregando...</div>
+  </div>
+</header><div id="chat"></div><footer>
+  <input id="mensagem" placeholder="Digite sua mensagem..." autocomplete="off">
+  <button onclick="enviar()">Enviar</button>
+</footer><script src="/socket.io/socket.io.js"></script><script>
+const socket = io();
+const chat = document.getElementById('chat');
+const input = document.getElementById('mensagem');
+
+function getSala(){
+  let hash = window.location.hash.replace('#','').trim();
+
+  if(!hash){
+    hash = Math.floor(Math.random() * 999999).toString();
+    window.location.hash = hash;
+  }
+
+  return hash;
+}
+
+const sala = getSala();
+document.getElementById('roomLabel').innerText = 'Sala: #' + sala;
+
+socket.emit('joinRoom', sala);
+
+addSystemMessage('Você entrou na sala #' + sala);
+
+function addSystemMessage(texto){
+  const div = document.createElement('div');
+  div.className = 'msg system';
+  div.innerText = texto;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function enviar(){
+  const texto = input.value.trim();
+  if(!texto) return;
+
+  socket.emit('msg', {
+    room: sala,
+    texto
+  });
+
+  input.value = '';
+}
+
+input.addEventListener('keypress', function(e){
+  if(e.key === 'Enter') enviar();
+});
+
+socket.on('msg', (data) => {
+  const div = document.createElement('div');
+  div.className = 'msg';
+  div.innerHTML = `<b>Anônimo-${data.id}</b>${data.texto}`;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+});
+
+socket.on('userJoined', () => {
+  addSystemMessage('Novo usuário entrou na sala');
+});
+
+socket.on('userLeft', () => {
+  addSystemMessage('Um usuário saiu da sala');
+});
+</script></body>
+</html>
